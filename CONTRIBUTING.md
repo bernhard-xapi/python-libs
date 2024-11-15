@@ -17,6 +17,20 @@ But this `tox` is older, so install `tox==4.5.1` using `pip` (see below)
 ```bash
 sudo dnf install tox;sudo rpm -e tox
 ```
+But preferably use `tox` from the virtual environment instead.
+
+## Development setup on Ubuntu 24.04
+
+Prefer the virtual environment. Alternatively, an option is to use `pipx`:
+
+```bash
+sudo apt install pipx
+pipx install tox; pipx install 'pytest<7';pipx install pylint
+pipx inject pytest pytest-{forked,localftpserver,pythonpath,subprocess,timeout} pyfakefs pytest_httpserver six mock
+pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
+```
+
+Use the `deadsnakes` ppa to install Python versions like 3.8 and 3.11 (see below)
 
 But preferably use `tox` from the virtual environment instead.
 
