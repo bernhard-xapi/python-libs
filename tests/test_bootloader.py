@@ -139,7 +139,7 @@ menuentry 'linux2' {
 
 class TestLinuxBootloader(unittest.TestCase):
     def setUp(self):
-        self.tmpdir = mkdtemp(prefix="testbl")
+        self.tmpdir = mkdtemp(prefix="test-bootloader")
         bootdir = os.path.join(self.tmpdir, "boot")
         grubdir = os.path.join(bootdir, "grub")
         os.makedirs(grubdir)

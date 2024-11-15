@@ -24,16 +24,15 @@ def set_warnings():
 
     One purpose of this fixture that with it, we can globally enable
     Development Mode (https://docs.python.org/3/library/devmode.html)
-    using setenv = PYTHONDEVMODE=yes in tox.int which enables further
+    using setenv:PYTHONDEVMODE=yes in tox.ini which enables further
     run-time checking during tests.
 
-    By additionally using setenv = PYTHONWARNINGS=ignore in tox.ini,
-    we can disable the Deprecation warnings which pytest plugins exhibit
-    (which we are not interested in, those are not our responsiblity).
-    and this fixture will still enable the default warning filter to
-    have e.g. ResourceWarning checks enabled.
+    Using setenv:PYTHONWARNINGS=ignore in tox.ini,
+    we disable the Deprecation warnings caused by pytest plugins.
+    This fixture enables the default warnings filter to
+    not filter the default warnings (e.g. ResourceWarning).
 
-    Another nice effect is that also during interactive pytest use, the
-    default warning filter also provides checking of ResourceWarning:
+    During interactive pytest use, this default warning filter
+    also provides checking of ResourceWarning:
     """
     warnings.simplefilter("default")
