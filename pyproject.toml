@@ -50,10 +50,9 @@ test = [
     "pytest>=7",
     "pytest-cov",
     "pytest-forked",
-    "pytest_httpserver; python_version >= '3.7'",
-    "pytest-localftpserver; python_version >= '3.7'",
-    "pytest-localftpserver==0.5.1; python_version <= '3.6'",
-    "pytest-subprocess; python_version >= '3.6'",
+    "pytest_httpserver",
+    "pytest-localftpserver",
+    "pytest-subprocess",
     "pytest-timeout",
     "typing_extensions"
 ]
