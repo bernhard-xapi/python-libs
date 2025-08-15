@@ -20,7 +20,24 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1" # Reduce noise in logs
 
 jobs:
+  pre-commit:
+    env:
+      SKIP: tox,no-commit-to-branch
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.13
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - uses: pre-commit/action@v3.0.1
+    - uses: pre-commit-ci/lite-action@v1.0.3
+      if: always()
+
   test:
+    needs: pre-commit
     strategy:
       # See: https://github.com/xenserver/python-libs/pull/26#discussion_r1179482169
       # max-parallel: 1
