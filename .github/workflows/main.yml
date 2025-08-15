@@ -14,7 +14,7 @@ concurrency:  # On new workflow, cancel old workflows from the same PR, branch o
 # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks#skipping-and-requesting-checks-for-individual-commits
 on: [push, pull_request]
 env:
-  PYTHONWARNINGS: "ignore:DEPRECATION"
+  PYTHONWARNINGS: "default,ignore::DeprecationWarning"
   PIP_ROOT_USER_ACTION: "ignore"     # For local testing using act-cli
   PIP_NO_WARN_SCRIPT_LOCATION: "0"   # For local testing using act-cli
   PIP_DISABLE_PIP_VERSION_CHECK: "1" # Reduce noise in logs
