@@ -152,6 +152,13 @@ def to_markdown(me, fp, returncode, results, branch_url):
 def setup_and_run_pytype_action(scriptname: str):
     config = load("pyproject.toml")
     pytype = config["tool"].get("pytype")
+    required_version = pytype.get("python_version")
+    if required_version:
+        if f"{sys.version_info[0]}.{sys.version_info[1]}" != required_version:
+            print(f"pytype requires to run in exactly Python {required_version}!")
+            print("It does not support 3.12: Fails to find pytest_httpserver with it")
+            sys.exit(1)
+
     xfail_files = pytype.get("xfail", []) if pytype else []
     repository_url = config["project"]["urls"]["repository"].strip(" /")
     filelink_baseurl = repository_url + "/blob/master"
