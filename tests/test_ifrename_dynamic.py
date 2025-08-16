@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import json
 import logging
+import time
 import unittest
 
 from io import StringIO
@@ -20,8 +21,11 @@ class TestLoadAndParse(unittest.TestCase):
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
+        # Workaround flaky unclosed file warnings on GitHub runners
         closeLogs()
+        time.sleep(0.1)
         self.logbuf.close()
+        time.sleep(0.2)
 
     def test_null(self):
         self.assertLoadDynamicRules("")
