@@ -22,9 +22,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def tearDown(self):
         # Workaround flaky unclosed file warnings on GitHub runners
-        time.sleep(0.1)
         closeLogs()
-        self.logbuf.flush()
         time.sleep(0.1)
         self.logbuf.close()
         time.sleep(0.2)
