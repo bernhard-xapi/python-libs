@@ -1,0 +1,62 @@
+name: Reviewdog PR Review comments
+
+#
+# The reviewdog steps use reporter: github-pr-review, which submits the results
+# as a review comment on the pull request. It needs a GitHub token with
+# public_repo scope to post the comments and can only be used in the context
+# of a pull request.
+#
+on: pull_request
+
+#
+# Checks can be skipped by adding "skip-checks: true" to a commit message,
+# or requested by adding "request-checks: true" if disabled by default for pushes:
+# https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks#skipping-and-requesting-checks-for-individual-commits
+#
+
+concurrency:  # On new workflow, cancel old workflows from the same PR, branch or tag:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reviewdog:
+    runs-on: ubuntu-24.04
+    env:
+      REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
+    steps:
+    - uses: actions/checkout@v4
+      id: checkout
+      if: env.REVIEWDOG_GITHUB_API_TOKEN && env.GITHUB_ACTOR != 'nektos/act'
+
+    - uses: actions/setup-python@v5
+      if: env.REVIEWDOG_GITHUB_API_TOKEN && env.GITHUB_ACTOR != 'nektos/act'
+      with:
+        python-version: 3.13
+
+    - name: Install uv and activate the environment
+      if: env.REVIEWDOG_GITHUB_API_TOKEN && env.GITHUB_ACTOR != 'nektos/act'
+      uses: astral-sh/setup-uv@v6
+      with:
+        activate-environment: true
+
+    - run: uv pip install pylint types-setuptools -r pyproject.toml --extra mypy
+      if: env.REVIEWDOG_GITHUB_API_TOKEN && env.GITHUB_ACTOR != 'nektos/act'
+
+    - uses: tsuyoshicho/action-mypy@v4
+      name: Run mypy with reviewdog to submit GitHub checks for warnings
+      if: env.REVIEWDOG_GITHUB_API_TOKEN && env.GITHUB_ACTOR != 'nektos/act'
+      with:
+        install_types: false
+        mypy_flags: --exclude python-libs-*/stubs/
+        reporter: github-pr-review
+        level: warning
+        github_token: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
+
+    - uses: dciborow/action-pylint@0.1.0
+      name: Run pylint with reviewdog to submit GitHub checks for warnings
+      if: env.REVIEWDOG_GITHUB_API_TOKEN && env.GITHUB_ACTOR != 'nektos/act'
+      with:
+        reporter: github-pr-review
+        glob_pattern: "xcp tests"
+        github_token: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
