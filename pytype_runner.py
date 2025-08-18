@@ -65,6 +65,8 @@ def skip_uninteresting_lines(line: str) -> bool:
 
 
 def run_pytype(command: List[str], branch_url: str, errorlog: TextIO, results):
+    if os.environ.get("GITHUB_STEP_SUMMARY", None):
+        print("::group::pytype-output")
     info(" ".join(shlex.quote(arg) for arg in command))
     # When run in tox, pytype dumps debug messages to stderr. Point stderr to /dev/null:
     popen = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
@@ -108,6 +110,8 @@ def run_pytype(command: List[str], branch_url: str, errorlog: TextIO, results):
     if popen.stdout:
         popen.stdout.close()
     popen.wait()
+    if os.environ.get("GITHUB_STEP_SUMMARY", None):
+        print("::endgroup::")
     return popen.returncode, results
 
 
