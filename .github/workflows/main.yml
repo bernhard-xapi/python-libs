@@ -81,20 +81,7 @@ jobs:
           !cancelled()
         name: Upload coverage reports to Coveralls
         env:
-          COVERALLS_PARALLEL: true
           COVERALLS_FLAG_NAME: ${{ format('python{0}', steps.python.outputs.python-version ) }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pip install coveralls && coveralls --service=github
-
-  # For combined coverage of 2.7, 3.8 and 3.11 we upload to Coveralls in parallel mode.
-  # To view the Coveralls results from the PR, click on the "Details" link to the right
-  # of the Coveralls Logo in the Checks section of the PR.
-  finish-coverage-upload:
-    if: github.actor != 'nektos/act'
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Finish the coverage upload to Coveralls
-        uses: coverallsapp/github-action@v1
-        with:
-          parallel-finished: true
+        continue-on-error: true  # Coveralls.io is currently overloaded
