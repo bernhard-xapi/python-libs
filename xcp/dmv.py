@@ -21,13 +21,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
-import subprocess
+import errno
+import glob
 import json
+import os
 import re
 import struct
-import glob
-import errno
+import subprocess
+from typing import Any, Dict
 
 from .compat import open_with_codec_handling
 
@@ -91,37 +92,36 @@ def id_matches(id1, id2):
         return True
     return id1 == id2
 
-'''
-driver_pci_ids example:
-{
-        "abc.ko": [
-            {
-                "vendor_id": "14e4",
-                "device_id": "163c",
-                "subvendor_id": "*",
-                "subdevice_id": "*"
-            },
-            {
-                "vendor_id": "14e4",
-                "device_id": "163b",
-                "subvendor_id": "*",
-                "subdevice_id": "*"
-            }],
-        "de.ko": [
-            {
-                "vendor_id": "eees",
-                "device_id": "163c",
-                "subvendor_id": "*",
-                "subdevice_id": "*"
-            },
-            {
-                "vendor_id": "14f4",
-                "device_id": "16db",
-                "subvendor_id": "2123",
-                "subdevice_id": "1123"
-            }]
-}
-'''
+
+# driver_pci_ids example:
+# {
+#     "abc.ko": [
+#         {
+#             "vendor_id": "14e4",
+#             "device_id": "163c",
+#             "subvendor_id": "*",
+#             "subdevice_id": "*"
+#         },
+#         {
+#             "vendor_id": "14e4",
+#             "device_id": "163b",
+#             "subvendor_id": "*",
+#             "subdevice_id": "*"
+#         }],
+#     "de.ko": [
+#         {
+#             "vendor_id": "eees",
+#             "device_id": "163c",
+#             "subvendor_id": "*",
+#             "subdevice_id": "*"
+#         },
+#         {
+#             "vendor_id": "14f4",
+#             "device_id": "16db",
+#             "subvendor_id": "2123",
+#             "subdevice_id": "1123"
+#         }]
+# }
 def pci_matches(present_pci_id, driver_pci_ids):
     """Check if present PCI ID matches any of the driver PCI IDs."""
     merged_driver_pci_id_list = []
@@ -236,6 +236,8 @@ class DriverMultiVersion(object):
         return json_data, json_formatted
 
 class DriverMultiVersionManager(object):
+    dmv_list = {}  # type: Dict[str, Any]
+
     def __init__(self, runtime=False):
         self.runtime = runtime
         self.dmv_list = {
@@ -296,7 +298,7 @@ class DriverMultiVersionManager(object):
         for _, updates_dir, dmv_dir in get_all_kabi_dirs():
             if not os.path.isdir(dmv_dir):
                 continue
-    
+
             for path, _, files in os.walk(dmv_dir):
                 if "info.json" not in files:
                     continue
