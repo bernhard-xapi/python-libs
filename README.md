@@ -1,7 +1,7 @@
 # Common XenServer/XCP-ng Python classes
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
-[![](https://img.shields.io/badge/python-2.7_%7C_3.6_%7C_3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11+-blue.svg)](https://www.python.org/downloads/)
+[![](https://img.shields.io/badge/python-3.6_%7C_3.10_%7C_3.11_%7C_3.12_%7C_3.13-blue.svg)](https://www.python.org/downloads/)
 [![codecov](https://codecov.io/gh/xenserver/python-libs/branch/master/graph/badge.svg?token=6WKVLDXJFN)](https://codecov.io/gh/xenserver/python-libs)
 [![](https://img.shields.io/badge/License-BSD--2--Cause%20%26%20MIT-brightgreen)](https://github.com/xenserver/python-libs/blob/master/LICENSE)
 
