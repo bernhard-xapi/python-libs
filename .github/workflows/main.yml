@@ -35,6 +35,8 @@ jobs:
         - python-version: '3.13'
           os: ubuntu-22.04
     runs-on: ${{ matrix.os }}
+    env:
+      COV_UPLOAD: ${{ '3.11' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -89,7 +91,7 @@ jobs:
         if: |
           steps.coverage.outcome == 'success' &&
           !env.CODECOV_TOKEN && !cancelled() &&
-          matrix.os == 'ubuntu-20.04' && github.actor != 'nektos/act' &&
+          matrix.python-version == env.COV_UPLOAD && github.actor != 'nektos/act' &&
           ( github.event.pull_request.number || github.ref == 'refs/heads/master' )
         uses: codecov/codecov-action@v3
         with:
@@ -111,7 +113,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         if: |
           env.CODECOV_TOKEN && !cancelled() && github.actor != 'nektos/act' &&
-          steps.coverage.outcome == 'success' && matrix.os == 'ubuntu-20.04'
+          steps.coverage.outcome == 'success' && matrix.python-version == env.COV_UPLOAD
         run: >
           set -euxv;
           mv .github/workflows/.tox/py38-covcombine-check/log/coverage.xml cov.xml;
