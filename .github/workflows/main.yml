@@ -114,15 +114,9 @@ jobs:
         if: |
           env.CODECOV_TOKEN && !cancelled() && github.actor != 'nektos/act' &&
           steps.coverage.outcome == 'success' && matrix.python-version == env.COV_UPLOAD
-        run: >
-          set -euxv;
-          mv .github/workflows/.tox/py38-covcombine-check/log/coverage.xml cov.xml;
-          curl -O https://cli.codecov.io/latest/linux/codecov; sudo chmod +x codecov;
-          ./codecov upload-process --report-type coverage
-          --name "CLI Upload for ${{ env.PYTHON_VERSION }}"
-          --git-service github --fail-on-error --file cov.xml --disable-search
-          --flag python${{ env.PYTHON_VERSION }}
-        continue-on-error: false  # Fail the job if the upload with CODECOV_TOKEN fails
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - if: steps.coverage.outcome == 'success'
         name: Upload coverage reports to Coveralls
