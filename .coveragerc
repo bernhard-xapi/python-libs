@@ -28,5 +28,5 @@ exclude_lines =
 precision = 1
 include =
         xcp/*
-omit =
-        xcp/dmv.py
+#omit =
+#        xcp/dmv.py

@@ -58,6 +58,20 @@ jobs:
         run: |
           pip install tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
+        env:
+          DIFF_COVERAGE_MIN: 0  # Let the reviewdog and codecov show uncovered lines
+
+      - uses: aki77/reviewdog-action-code-coverage@v2
+        continue-on-error: true
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
+        if:
+          env.REVIEWDOG_GITHUB_API_TOKEN &&
+          matrix.python-version == env.COV_UPLOAD &&
+          github.actor != 'nektos/act'
+        with:
+          lcov_path: coverage.lcov
+          github_token: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
 
       - name: Upload coverage reports to Codecov
         env:
