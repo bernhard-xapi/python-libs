@@ -75,46 +75,20 @@ jobs:
       # Links to get and set the token:
       # Get the CODECOV_TOKEN: https://app.codecov.io/gh/xenserver/python-libs/settings
       # Set the CODE_COV_TOKEN: https://github.com/xenserver/python-libs/settings/secrets/actions
-
-      # Without it, the API calls are rate-limited by GitHub, and the upload may fail:
-      # https://github.com/codecov/feedback/issues/126#issuecomment-1932658904
-      #
-      - name: Upload coverage reports to Codecov (fallback, legacy Node.js 16 action)
-        # If CODECOV_TOKEN is not set, use the legacy tokenless Codecov action:
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        # To reduce chances of GitHub's API throttling to hit this upload, only run the
-        # upload for the py38-covcombine-check job running on Ubuntu-20.04, which is the
-        # one we need. And only run it for PRs and the master branch, not for pushes.
-        # This reduces the number of uploads and the chance of hitting the rate limit
-        # by a factor of 6.
-        if: |
-          steps.coverage.outcome == 'success' &&
-          !env.CODECOV_TOKEN && !cancelled() &&
-          matrix.python-version == env.COV_UPLOAD && github.actor != 'nektos/act' &&
-          ( github.event.pull_request.number || github.ref == 'refs/heads/master' )
-        uses: codecov/codecov-action@v3
-        with:
-          directory: .github/workflows/.tox/py38-covcombine-check/log
-          env_vars: OS,PYTHON
-          # Use fail_ci_if_error: false as explained the big comment above:
-          # Not failing this job in this case is ok because the tox CI checks also contain
-          # a diff-cover check which would fail on changed lines missing coverage.
-          # The Codecov CLI is more reliable and should be used if the CODECOV_TOKEN is set.
-          # The Codecov CLI is used in the next step when CODECOV_TOKEN is set.
-          fail_ci_if_error: false
-          flags: unittest
-          name: py27-py38-combined
-          verbose: true
-
       - name: Upload coverage reports to Codecov (used when secrets.CODECOV_TOKEN is set)
         # If CODECOV_TOKEN is set, use the new Codecov CLI to upload the coverage reports
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        id: codecov
         if: |
           env.CODECOV_TOKEN && !cancelled() && github.actor != 'nektos/act' &&
           steps.coverage.outcome == 'success' && matrix.python-version == env.COV_UPLOAD
         uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() && steps.codecov.outcome == 'success' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
