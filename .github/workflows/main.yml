@@ -54,35 +54,18 @@ jobs:
         if: ${{ github.actor == 'nektos/act'}}
         run: apt-get update && apt-get install -y cpio
 
-      - name: Run of tox on ubuntu-latest
-        if: ${{ startsWith(matrix.python-version, '3.') && matrix.python-version != 3.6 }}
+      - name: Run tox to run pytest in the defined tox environments
         run: |
-          pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
+          pip install tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
 
-      - name: Select the coverage file for upload
-        if: |
-          ( matrix.python-version == '3.6' || matrix.python-version == '3.11' ) &&
-          ( !cancelled() && github.actor != 'nektos/act' )
-        id: coverage
-        run: mv $( ls -t .github/workflows/.tox/*/log/.coverage | head -1 ) .coverage
-
-      # The new reliable Codecov upload requires Codecov to query the GitHub API to check
-      # the repo and the commit. The repo (or organisation) owner needs to login to
-      # codecov, generated the CODECOV_TOKEN and save it as a secret in the ORG or the repo:
-      # https://docs.codecov.com/docs/adding-the-codecov-token
-
-      # Links to get and set the token:
-      # Get the CODECOV_TOKEN: https://app.codecov.io/gh/xenserver/python-libs/settings
-      # Set the CODE_COV_TOKEN: https://github.com/xenserver/python-libs/settings/secrets/actions
-      - name: Upload coverage reports to Codecov (used when secrets.CODECOV_TOKEN is set)
-        # If CODECOV_TOKEN is set, use the new Codecov CLI to upload the coverage reports
+      - name: Upload coverage reports to Codecov
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         id: codecov
         if: |
           env.CODECOV_TOKEN && !cancelled() && github.actor != 'nektos/act' &&
-          steps.coverage.outcome == 'success' && matrix.python-version == env.COV_UPLOAD
+          matrix.python-version == env.COV_UPLOAD
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -92,7 +75,10 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - if: steps.coverage.outcome == 'success'
+      - if: |
+          matrix.python-version == env.COV_UPLOAD &&
+          github.actor != 'nektos/act' &&
+          !cancelled()
         name: Upload coverage reports to Coveralls
         env:
           COVERALLS_PARALLEL: true
