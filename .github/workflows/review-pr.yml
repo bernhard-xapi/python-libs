@@ -1,0 +1,89 @@
+#
+# The reviewdog workflow steps use reporter: github-pr-review,
+# which submits mypy and pylint warnings using review comment
+# on the pull request. It needs write permissions for the pull request
+# to post the comments and can only be used in the context of a pull request.
+#
+name: mypy, pylint and coverage PR review comments
+
+on:
+  workflow_run:
+    workflows: ["Trigger PR review"]  # The name of the triggering workflow in main.yml
+    types: [in_progress]
+
+concurrency:  # Cancel old workflows with same triggering workflow, repository and branch:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  mypy-pylint-comments:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-22.04
+    env:
+      GITHUB_EVENT_PATH: event.json
+      GITHUB_EVENT_NAME: ${{ github.event.workflow_run.event }}
+      GITHUB_SHA:        ${{ github.event.workflow_run.head_sha }}
+    steps:
+    - run: |
+        echo "Triggered repo: ${{ github.event.workflow_run.head_repository.full_name }}"
+    - run: |
+        echo "Triggered by: ${{ github.event.workflow_run.event }}"
+    - run: |
+        echo "SHA of triggering workflow: ${{ github.event.workflow_run.head_sha }}"
+    - name: EVENT_PATH is ${{ env.GITHUB_EVENT_PATH }}/${{ env.GITHUB_EVENT_NAME}}, SHA is ${{ env.GITHUB_SHA }}
+      run: echo "GITHUB_SHA=$GITHUB_SHA"
+      # env:
+      #   GITHUB_SHA: ${{ github.event.workflow_run.head_sha }}
+
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ github.event.workflow_run.head_repository.full_name }}
+        ref: ${{ github.event.workflow_run.head_sha }}
+
+    - run: cat ${GITHUB_EVENT_PATH}
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
+
+    - name: Install uv and activate the environment
+      uses: astral-sh/setup-uv@v6
+      with:
+        activate-environment: true
+
+    - name: Run tox to run pytest in the defined tox environments
+      run: |
+        uv pip install pylint tox types-setuptools -r pyproject.toml --extra mypy;
+        tox -e py311-covcp
+      continue-on-error: true
+      env:
+        DIFF_COVERAGE_MIN: 0  # reviewdog-action-code-coverage shows coverage
+
+    - name: Download PR event payload
+      uses: actions/download-artifact@v4
+      with:
+        name: pr-event
+
+    - uses: tsuyoshicho/action-mypy@v4
+      name: Run mypy with reviewdog to submit GitHub checks for warnings
+      with:
+        install_types: false
+        reporter: github-pr-review
+        level: warning
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: dciborow/action-pylint@0.1.0
+      name: Run pylint with reviewdog to submit GitHub checks for warnings
+      with:
+        reporter: github-pr-review
+        glob_pattern: "xcp tests"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - uses: aki77/reviewdog-action-code-coverage@v2
+      with:
+        lcov_path: coverage.lcov
+        github_token: ${{ secrets.GITHUB_TOKEN }}
