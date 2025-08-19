@@ -1,0 +1,46 @@
+#
+# The reviewdog workflow steps use reporter: github-pr-review,
+# which submits mypy and pylint warnings using review comment
+# on the pull request. It needs write permissions for the pull request
+# to post the comments and can only be used in the context of a pull request.
+#
+name: mypy and pylint PR review comments
+
+on: pull_request
+
+concurrency:  # On new workflow, cancel old workflows from the same PR, branch or tag:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  reviewdog:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.13
+
+    - name: Install uv and activate the environment
+      uses: astral-sh/setup-uv@v6
+      with:
+        activate-environment: true
+
+    - run: uv pip install pylint types-setuptools -r pyproject.toml --extra mypy
+
+    - uses: tsuyoshicho/action-mypy@v4
+      name: Run mypy with reviewdog to submit GitHub checks for warnings
+      with:
+        install_types: false
+        reporter: github-pr-review
+        level: warning
+
+    - uses: dciborow/action-pylint@0.1.0
+      name: Run pylint with reviewdog to submit GitHub checks for warnings
+      with:
+        reporter: github-pr-review
+        glob_pattern: "xcp tests"
