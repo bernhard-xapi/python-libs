@@ -4,18 +4,18 @@
 
 Python3.6 on XS8 does not have an all-encompassing default UTF-8 mode for I/O.
 
-Newer Python versions have an UTF-8 mode that they even enable by default.
-Python3.6 only enabled UTF-8 for I/O when an UTF-8 locale is used.
+Newer Python versions have a UTF-8 mode that they even enable by default.
+Python3.6 only enabled UTF-8 for I/O when a UTF-8 locale is used.
 See below for more background info on the UTF-8 mode.
 
 For situations where UTF-8 enabled, we have to specify UTF-8 explicitly.
 
-Such sitation happens when LANG or LC_* variables are not set for UTF-8.
-XAPI plugins like auto-cert-kit find themself in this situation.
+This happens when LANG or LC_* variables are not set for UTF-8.
+XAPI plugins like auto-cert-kit find themselves in this situation.
 
 Example:
 For reading UTF-8 files like the `pciids` file, add `encoding="utf-8"`.
-This applies especailly to `open()` and `Popen()` when files my contain UTF-8.
+This applies especially to `open()` and `Popen()` when files may contain UTF-8.
 
 This also applies when en/decoding to/form `urllib` which uses bytes.
 `urllib` has to use bytes as HTTP data can of course also be binary, e.g. compressed.
@@ -95,7 +95,7 @@ for i in 2.7 3.{6,7};do echo "$i:";
   LC_ALL=C python$i -c 'open("/usr/share/hwdata/pci.ids").read()';done
 ```
 
-```
+```text
 2.7:
 3.6:
 Traceback (most recent call last):
@@ -106,7 +106,8 @@ UnicodeDecodeError: 'ascii' codec can't decode byte 0xc2 in position 97850: ordi
 3.7:
 ```
 
-This error means that the `'ascii' codec` cannot handle input ord() >= 128, and as some Video cards use `²` to reference their power, the `ascii` codec chokes on them.
+This error means that the `'ascii' codec` cannot handle input `ord() >= 128`,
+and as some Video cards use `²` to reference their power, the `ascii` codec chokes on them.
 
 It means `xcp.pci.PCIIds()` cannot use `open("/usr/share/hwdata/pci.ids").read()`.
 
@@ -119,21 +120,22 @@ echo -e "\0262"  # ISO-8859-1 for: "²"
 python3 -c 'open(".text").read()'
 ```
 
-```
+```text
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
   File "<frozen codecs>", line 322, in decode
 UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb2 in position 0: invalid start byte
 ```
 
-Of course, `xcp/net/ifrename` won't be affected but it would be good to fix the
+Of course, `xcp/net/ifrename` won't be affected, but it would be good to fix the
 warning for them as well in an intelligent way. See the proposal for that below.
 
 There are a couple of possibilities and Python because 2.7 does not support the
 arguments we need to pass to ensure that all users of open() will work, we need
 to make passing the arguments conditional on Python >= 3.
 
-1. Overriding `open()`, while technically working would not only affect xcp.python but the entire program:
+1. Overriding `open()`, while technically working would not only affect
+   `xcp.compat` but the entire program:
 
     ```py
     if sys.version_info >= (3, 0):
